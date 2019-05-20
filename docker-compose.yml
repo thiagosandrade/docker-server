@@ -3,41 +3,58 @@ version: '3.1'
 services:
     teamcity:
         image: jetbrains/teamcity-server:latest
+        restart: unless-stopped
         volumes:
           - teamcity-server-datadir:/data/teamcity-server/datadir
           - teamcity-server-logs:/opt/teamcity/logs
         ports:
             - 8111:8111
+            
     teamcity-jetbrains:
         image: jetbrains/teamcity-agent:latest
+        restart: unless-stopped
         environment:
             SERVER_URL: http://teamcity:8111
+            AGENT_NAME: "teamcity-jetbrains"
+        links:
+          - teamcity:teamcity
         volumes:
-          - teamcity-agent-conf:/data/teamcity_agent/conf
+          - teamcity-agent1-conf:/data/teamcity_agent/conf
           - /var/run/docker.sock:/var/run/docker.sock
-    teamcity-lunarfrog:
-        image: lunarfrog/teamcity-agent-dotnet:latest
-        environment:
-            SERVER_URL: http://teamcity:8111
-        volumes:
-            - /srv/teamcity/agents/001/conf:/data/teamcity_agent/conf
-    teamcity-minimal-agent:
-        image: jetbrains/teamcity-minimal-agent
-        environment:
-            SERVER_URL: http://teamcity:8111
-        volumes:
-            - /srv/teamcity/agents/001/conf:/data/teamcity_agent/conf
-    teamcity-codemazeblog:
-        image: codemazeblog/teamcity-agent-docker-compose:latest
-        environment:
-          SERVER_URL: http://teamcity:8111
-        volumes:
-          - teamcity-agent-conf:/data/teamcity_agent/conf
-          - /opt/buildagent/work:/opt/buildagent/work
+          - /opt/buildagent/work:/opt/buildagent/work 
           - /opt/buildagent/temp:/opt/buildagent/temp
+        
+    teamcity-jetbrains-latest:
+        image: jetbrains/teamcity-agent:latest
+        restart: unless-stopped
+        environment:
+            SERVER_URL: http://teamcity:8111
+            AGENT_NAME: "teamcity-jetbrains2"
+        links:
+          - teamcity:teamcity
+        volumes:
+          - teamcity-agent2-conf:/data/teamcity_agent/conf
           - /var/run/docker.sock:/var/run/docker.sock
+          - /opt/buildagent/work:/opt/buildagent/work 
+          - /opt/buildagent/temp:/opt/buildagent/temp
+          
+    teamcity-jetbrains-node:
+        image: bsalmeida/teamcity-dotnetcore22-node-agent
+        restart: unless-stopped
+        environment:
+            SERVER_URL: http://teamcity:8111
+            AGENT_NAME: "teamcity-node"
+        links:
+          - teamcity:teamcity
+        volumes:
+          - teamcity-agent3-conf:/data/teamcity_agent/conf
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /opt/buildagent/work:/opt/buildagent/work 
+          - /opt/buildagent/temp:/opt/buildagent/temp 
     
 volumes:
   teamcity-server-datadir:
   teamcity-server-logs:
-  teamcity-agent-conf:
+  teamcity-agent1-conf:
+  teamcity-agent2-conf:
+  teamcity-agent3-conf:
